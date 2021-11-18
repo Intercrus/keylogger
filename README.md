@@ -13,4 +13,5 @@ Monitors keystrokes and sends reports to email/telegram/file
 
 + Clone repository
 + Change file `.env-example` to `.env`
-+ Configure file `.env`: your bot_token, email etc
++ Configure file `.env`: your TELEGRAM_BOT_TOKEN, EMAIL etc
++ Configure method `report_to_email` if you use `report_method="email"`
